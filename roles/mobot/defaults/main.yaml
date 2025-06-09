@@ -1,5 +1,5 @@
 ---
-mobot_github_repo: https://github.com/Ekumen-OS/mobot.git
+mobot_github_repo: https://github.com/halqupati/mobot.git
 mobot_workspace_path: "/home/{{ ansible_user }}/mobot_ws"
 
 mobot_install_from_sources: "{{ ('True' if ros2_distribution == 'jazzy' else 'False') | bool }}"
