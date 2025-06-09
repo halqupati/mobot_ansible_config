@@ -1,0 +1,11 @@
+---
+ansible_user: "{{ lookup('pipe', 'whoami') }}"
+
+common_arch_matrix:
+  x86_64: amd64
+  aarch64: arm64
+  armv7l: armhf
+
+common_target_arch: "{{ common_arch_matrix[ansible_architecture] }}"
+
+common_warnings: []

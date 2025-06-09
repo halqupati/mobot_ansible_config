@@ -1,0 +1,41 @@
+- name: Mobot play installation
+  hosts:
+    - localhost
+  connection: local
+  roles:
+    - mobot
+
+- name: Post-installation play
+  hosts:
+    - localhost
+  connection: local
+  tasks:
+    - name: Update all remaining packages
+      apt:
+        upgrade: dist
+        force: true
+      become: true
+      tags: update
+
+    - name: Autoremove apt
+      apt:
+        autoremove: true
+        purge: true
+      become: true
+      tags: update, skip_ci
+
+    - name: Autoclean apt
+      apt:
+        autoclean: true
+      become: true
+      tags: update
+
+    - name: Display warnings
+      fail:
+        msg: "{{ common_warnings }}"
+      when: common_warnings is defined and common_warnings | length > 0
+      ignore_errors: true  # noqa: ignore-errors
+
+    - name: Display post install message
+      debug:
+        msg: "To start using your robot, make sure to rebot it with: `sudo reboot`"

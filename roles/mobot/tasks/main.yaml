@@ -1,0 +1,12 @@
+---
+- name: Run Mobot Hardware tasks
+  import_tasks: 00-mobot_hardware.yaml
+  tags: skip_ci
+
+- name: Install Mobot packages via debians
+  import_tasks: 01-mobot_debians.yaml
+  when: not mobot_install_from_sources
+
+- name: Install Mobot packages from sources
+  import_tasks: 02-mobot_sources.yaml
+  when: mobot_install_from_sources or mobot_extra_sources | length > 0

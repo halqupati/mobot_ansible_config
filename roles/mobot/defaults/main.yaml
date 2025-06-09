@@ -1,0 +1,18 @@
+---
+mobot_github_repo: https://github.com/Ekumen-OS/mobot.git
+mobot_workspace_path: "/home/{{ ansible_user }}/mobot_ws"
+
+mobot_install_from_sources: "{{ ('True' if ros2_distribution == 'jazzy' else 'False') | bool }}"
+
+mobot_extra_ros_packages: []
+mobot_extra_sources: []
+
+mobot_arduino_serial:
+  id_vendor: 1a86
+  id_product: 7523
+  name: ttyUSB_ARDUINO
+
+mobot_lidar_serial:
+  id_vendor: 10c4
+  id_product: ea60
+  name: ttyUSB_LIDAR

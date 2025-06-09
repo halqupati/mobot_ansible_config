@@ -1,0 +1,65 @@
+---
+# From:
+# https://github.com/Ekumen-OS/andino/tree/jazzy?tab=readme-ov-file#build-from-source
+- name: Install dependencies
+  apt:
+    pkg:
+      - python3-rosdep
+      - python3-catkin-pkg
+      - python3-catkin-pkg-modules
+      - python3-rospkg-modules
+      - python3-rospkg
+    state: present
+    update_cache: true
+    cache_valid_time: 3600
+  become: true
+
+- name: Create the Mobot workspace
+  file:
+    dest: "{{ mobot_workspace_path }}/src"
+    state: directory
+    owner: "{{ ansible_user }}"
+    mode: "0775"
+
+- name: Clone the Mobot Github repository
+  git:
+    repo: "{{ mobot_github_repo }}"
+    dest: "{{ mobot_workspace_path }}/src/mobot"
+    version: "{{ ros2_distribution }}"
+    accept_hostkey: true
+    single_branch: true
+  when: mobot_install_from_sources
+
+- name: Install extra source repositories
+  git:
+    repo: "{{ item.url }}"
+    dest: "{{ mobot_workspace_path }}/src"
+    version: "{{ item.branch }}"
+    accept_hostkey: true
+    single_branch: true
+  with_items: "{{ mobot_extra_sources }}"
+  when: mobot_extra_sources | length > 0
+
+- name: Install Mobot dependencies via rosdep
+  shell: |
+    source /opt/ros/{{ ros2_distribution }}/setup.bash &&
+    rosdep install --from-paths {{ andino_workspace_path }}/src --ignore-src -y
+  register: rosdep_install_result
+  changed_when: "rosdep_install_result.stdout != '#All required rosdeps installed successfully'"
+  args:
+    executable: /bin/bash
+
+- name: Build the Mobot workspace with colon
+  shell: source /opt/ros/{{ ros2_distribution }}/setup.bash && colcon build
+  args:
+    chdir: "{{ mobot_workspace_path }}"
+    executable: /bin/bash
+    creates: install/setup.bash
+
+- name: Update .bashrc with install/setup.bash
+  lineinfile:
+    path: /home/{{ ansible_user }}/.bashrc
+    line: source {{ andino_workspace_path }}/install/setup.bash
+    state: present
+    insertbefore: "# BEGIN ANSIBLE MANAGED BLOCK"
+    firstmatch: true

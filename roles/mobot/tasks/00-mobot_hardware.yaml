@@ -1,0 +1,99 @@
+---
+# From: https://github.com/Ekumen-OS/andino/tree/jazzy/andino_hardware
+#
+- name: Install RPi Camera dependencies
+  apt:
+    pkg:
+      - libraspberrypi-bin
+      - v4l-utils
+      - raspi-config
+    state: present
+    update_cache: true
+    cache_valid_time: 3600
+  become: true
+
+- name: Add user to dialout group to be able to use serial ports and camera
+  user:
+    name: "{{ ansible_user }}"
+    groups: "dialout,plugdev,video"
+    append: true
+  become: true
+
+- name: Read RPi camera status
+  command: vcgencmd get_camera
+  register: camera_state
+  changed_when: false
+
+- name: Check if RPi camera is installed and working
+  set_fact:
+    common_warnings: "{{ common_warnings + ['RPi camera not detected'] }}"
+  when: "'supported=1 detected=1' not in camera_state"
+
+- name: Configure RPi camera if it isn't detected
+  command: sudo raspi-config nonint do_camera 1
+  when: "'supported=1 detected=1' not in camera_state"
+  changed_when: true
+
+- name: Configure serial port names for Arduino and Lidar
+  template:
+    src: 10-usb-serial.rules.j2
+    dest: /etc/udev/rules.d/10-usb-serial.rules
+    mode: u=rw,g=r,o=r
+  become: true
+  register: usb_serial_rules
+
+- name: "Reload udev rules for serial"
+  shell: udevadm control --reload-rules && udevadm trigger
+  become: true
+  when: usb_serial_rules.changed  # noqa: no-handler
+  changed_when: true
+
+- name: Verify custom Arduino serial port exists
+  stat:
+    path: "/dev/{{ mobot_arduino_serial.name }}"
+  register: mobot_arduino_serial_result
+  failed_when: not mobot_arduino_serial_result.stat.exists
+
+- name: Verify custom Lidar serial port exists
+  stat:
+    path: "/dev/{{ mobot_lidar_serial.name }}"
+  register: mobot_lidar_serial_result
+  failed_when: not mobot_lidar_serial_result.stat.exists
+
+- name: Install PlatformIO dependencies
+  apt:
+    name: python3-venv
+    state: present
+    update_cache: true
+    cache_valid_time: 3600
+  become: true
+
+- name: Download PlatformIO installer
+  get_url:
+    url: https://raw.githubusercontent.com/platformio/platformio-core-installer/master/get-platformio.py
+    dest: /tmp/get-platformio.py
+    mode: "0775"
+
+- name: Install PlatformIO
+  command: python3 /tmp/get-platformio.py
+  register: pio_install
+  changed_when: pio_install.rc == 0
+
+- name: Add PlatformIO to the PATH
+  lineinfile:
+    path: "/home/{{ ansible_user }}/.bashrc"
+    line: "export PATH=$PATH:/home/{{ ansible_user }}/.platformio/penv/bin"
+
+- name: Download udev rules for PlatformIO
+  get_url:
+    url: https://raw.githubusercontent.com/platformio/platformio-core/develop/platformio/assets/system/99-platformio-udev.rules
+    dest: /etc/udev/rules.d/99-platformio-udev.rules
+    mode: u=rw,g=r,o=r
+  become: true
+  register: platformio_rules
+
+- name: "Reload udev rules for platformio"
+  shell: udevadm control --reload-rules && udevadm trigger
+  become: true
+  when: platformio_rules.changed  # noqa: no-handler
+  changed_when: true
