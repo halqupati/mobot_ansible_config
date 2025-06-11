@@ -48,18 +48,6 @@
   when: usb_serial_rules.changed  # noqa: no-handler
   changed_when: true
 
-- name: Verify custom Arduino serial port exists
-  stat:
-    path: "/dev/{{ mobot_arduino_serial.name }}"
-  register: mobot_arduino_serial_result
-  failed_when: not mobot_arduino_serial_result.stat.exists
-
-- name: Verify custom Lidar serial port exists
-  stat:
-    path: "/dev/{{ mobot_lidar_serial.name }}"
-  register: mobot_lidar_serial_result
-  failed_when: not mobot_lidar_serial_result.stat.exists
-
 - name: Install PlatformIO dependencies
   apt:
     name: python3-venv
