@@ -1,12 +1,4 @@
 ---
-- name: Install Mobot packages
-  apt:
-    name: "{{ 'ros-' + ros2_distribution + '-mobot-bringup' }}"
-    state: present
-    update_cache: true
-    cache_valid_time: 3600
-  become: true
-
 - name: Install extra packages
   apt:
     name: "{{ packages }}"
