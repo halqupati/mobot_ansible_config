@@ -13,7 +13,7 @@ This repository contains Ansible configurations for managing and automating the 
 
 ## Requirements
 
-- An [mobot](https://github.com/Ekumen-OS/mobot/) robot running Ubuntu (22.04 or 24.04)
+- An [mobot](https://github.com/halqupati/mobot.git) robot running Ubuntu (22.04 or 24.04)
 - Ansible 2.9+ installed on the robot
 - Access to this GitHub repository or the Git URL
 
@@ -50,7 +50,7 @@ ansible-pull allows you to pull the latest playbooks and roles from a Git reposi
   1. Run ansible-pull to apply the Ansible configuration from the repository to the robot:
 
   ```bash
-  ansible-pull -U https://github.com/garyservin/mobot_ansible_config.git -K
+  ansible-pull -U https://github.com/halqupati/mobot_ansible_config.git -K
   ```
 
   Explanation of the command:
